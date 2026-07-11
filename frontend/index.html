@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BookSearch · Search by Plot</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+
+<style>
+  :root{
+    --ink:        #12192b;
+    --ink-deep:   #0b1020;
+    --paper:      #f1ecdc;
+    --brass:      #c9a227;
+    --brass-dim:  #8a7020;
+    --teal:       #3f6e63;
+    --text-lo:    #aab0c4;
+    --text-hi:    #f1ecdc;
+  }
+
+  *{ box-sizing:border-box; }
+
+  body{
+    background: radial-gradient(ellipse at top, #1a2340 0%, var(--ink) 45%, var(--ink-deep) 100%);
+    min-height:100vh;
+    color: var(--text-hi);
+    font-family:'Inter', sans-serif;
+  }
+
+  .brand-eyebrow{
+    font-family:'IBM Plex Mono', monospace;
+    letter-spacing:.35em;
+    font-size:.72rem;
+    color: var(--brass);
+    text-transform:uppercase;
+  }
+
+  .brand-title{
+    font-family:'Fraunces', serif;
+    font-weight:700;
+    font-size: clamp(2.2rem, 5vw, 3.4rem);
+    color: var(--text-hi);
+    letter-spacing:-0.01em;
+  }
+
+  .brand-sub{
+    color: var(--text-lo);
+    font-size:1.05rem;
+    max-width:34rem;
+  }
+
+  .catalog-drawer{
+    background: linear-gradient(180deg, #1c2540, #161d33);
+    border:1px solid rgba(201,162,39,.25);
+    border-radius:14px;
+    padding:1.1rem;
+    box-shadow:0 20px 60px -20px rgba(0,0,0,.6), inset 0 1px 0 rgba(255,255,255,.03);
+  }
+
+  .catalog-drawer .form-control{
+    background: var(--paper);
+    border:none;
+    color:#221c0f;
+    font-family:'Fraunces', serif;
+    font-size:1.15rem;
+    padding:.85rem 1.1rem;
+    border-radius:10px 0 0 10px;
+  }
+
+  .catalog-drawer .form-control:focus{
+    box-shadow:0 0 0 3px rgba(201,162,39,.35);
+  }
+
+  .catalog-drawer .form-control::placeholder{
+    color:#7a7255;
+    font-style:italic;
+  }
+
+  .btn-search{
+    background:var(--brass);
+    border:none;
+    color:var(--ink-deep);
+    font-weight:600;
+    padding:0 1.5rem;
+    border-radius:0 10px 10px 0;
+    transition:background .15s ease;
+  }
+
+  .btn-search:hover{
+    background:#e0b93a;
+    color:var(--ink-deep);
+  }
+
+  .btn-search:disabled{
+    background:#8a7f56;
+  }
+
+  .dataset-row{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:.72rem;
+    color:var(--text-lo);
+    letter-spacing:.08em;
+  }
+
+  .dataset-chip{
+    background:transparent;
+    border:1px solid rgba(170,176,196,.3);
+    color:var(--text-lo);
+    border-radius:20px;
+    padding:.25rem .9rem;
+    font-family:inherit;
+    font-size:.72rem;
+    text-transform:uppercase;
+    transition:border-color .15s ease, color .15s ease, background .15s ease;
+  }
+
+  .dataset-chip:hover{
+    border-color:var(--brass);
+    color:var(--brass);
+  }
+
+  .dataset-chip.active{
+    background:rgba(201,162,39,.15);
+    border-color:var(--brass);
+    color:var(--brass);
+    font-weight:500;
+  }
+
+  .tag-row{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:.75rem;
+    color:var(--text-lo);
+    letter-spacing:.05em;
+  }
+
+  .tag-row button{
+    background:transparent;
+    border:1px solid rgba(170,176,196,.3);
+    color:var(--text-lo);
+    border-radius:20px;
+    padding:.2rem .7rem;
+    font-family:inherit;
+    font-size:.72rem;
+  }
+
+  .tag-row button:hover{
+    border-color:var(--brass);
+    color:var(--brass);
+  }
+
+  .index-tag{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:1.6rem;
+    font-weight:500;
+    color:var(--brass-dim);
+    min-width:3rem;
+    line-height:1;
+  }
+
+  .result-card{
+    background:rgba(241,236,220,.03);
+    border:1px solid rgba(201,162,39,.14);
+    border-left:3px solid var(--brass-dim);
+    border-radius:8px;
+    padding:1.1rem 1.3rem;
+    transition:border-color .15s ease, transform .15s ease, background .15s ease;
+  }
+
+  .result-card:hover{
+    border-left-color:var(--brass);
+    background:rgba(241,236,220,.06);
+    transform:translateX(2px);
+  }
+
+  .result-title{
+    font-family:'Fraunces', serif;
+    font-weight:600;
+    font-size:1.25rem;
+    color:var(--text-hi);
+  }
+
+  .result-author{
+    color:var(--text-lo);
+    font-size:.92rem;
+  }
+
+  .sim-meter{
+    height:5px;
+    background:rgba(255,255,255,.08);
+    border-radius:3px;
+    overflow:hidden;
+    min-width:110px;
+  }
+
+  .sim-meter span{
+    display:block;
+    height:100%;
+    background:linear-gradient(90deg,var(--teal),var(--brass));
+  }
+
+  .sim-value{
+    font-family:'IBM Plex Mono', monospace;
+    font-size:.78rem;
+    color:var(--brass);
+    white-space:nowrap;
+  }
+
+  .state-box{
+    color:var(--text-lo);
+    font-family:'IBM Plex Mono', monospace;
+    font-size:.85rem;
+  }
+
+  footer.api-note{
+    color:rgba(170,176,196,.55);
+    font-family:'IBM Plex Mono', monospace;
+    font-size:.72rem;
+  }
+</style>
+</head>
+
+<body>
+
+<div class="container py-5" style="max-width:760px;">
+
+  <div class="text-center mb-4">
+    <div class="brand-eyebrow mb-2">BookSearch · Gutenberg Library</div>
+
+    <h1 class="brand-title mb-2">Find a Book by its Plot</h1>
+
+    <p class="brand-sub mx-auto">
+      Describe the story you're looking for. The search engine analyzes your
+      description and compares it against the catalog using TF-IDF vectors
+      and cosine similarity.
+    </p>
+  </div>
+
+  <form id="search-form" class="catalog-drawer mb-3" autocomplete="off">
+    <div class="dataset-row d-flex align-items-center justify-content-center gap-2 flex-wrap mb-3">
+      <span class="me-1">Catalog:</span>
+      <button type="button" class="dataset-chip active" data-size="500">500 books</button>
+      <button type="button" class="dataset-chip" data-size="2000">2,000 books</button>
+      <button type="button" class="dataset-chip" data-size="5000">5,000 books</button>
+    </div>
+    <div class="input-group">
+      <input
+        type="text"
+        id="query-input"
+        class="form-control"
+        placeholder="e.g. a sailor stranded on a deserted island..."
+        required
+        minlength="2"
+      >
+      <button class="btn btn-search" type="submit" id="search-btn">
+        Search
+      </button>
+    </div>
+  </form>
+
+  <div class="tag-row d-flex gap-2 justify-content-center flex-wrap mb-5">
+    <span class="me-1 pt-1">Examples:</span>
+
+    <button type="button" class="example-chip">
+      love and betrayal during wartime
+    </button>
+
+    <button type="button" class="example-chip">
+      a sea adventure involving a giant whale
+    </button>
+
+    <button type="button" class="example-chip">
+      investigating a murder in a Victorian city
+    </button>
+  </div>
+
+  <div id="state-box" class="state-box text-center mb-4"></div>
+  <div id="results" class="d-flex flex-column gap-2"></div>
+
+</div>
+
+<footer class="api-note text-center pb-4">
+  BookSearch · TF-IDF Search Engine · Project Gutenberg
+</footer>
+
+<script>
+const API_BASE_URL = "http://localhost:5000";
+const SEARCH_ENDPOINT = `${API_BASE_URL}/api/search`;
+const TOP_N = 10;
+
+let selectedDataset = "500";
+
+const form = document.getElementById("search-form");
+const input = document.getElementById("query-input");
+const btn = document.getElementById("search-btn");
+const resultsBox = document.getElementById("results");
+const stateBox = document.getElementById("state-box");
+
+function setState(html){
+    stateBox.innerHTML = html;
+}
+
+function clearResults(){
+    resultsBox.innerHTML = "";
+}
+
+function renderResults(payload){
+
+    clearResults();
+
+    const { results, query, count, time_s } = payload;
+
+    if(!results || results.length === 0){
+        setState(`No results found for "<em>${escapeHtml(query)}</em>".`);
+        return;
+    }
+
+    setState(`
+        ${count} result${count === 1 ? "" : "s"} for
+        "<em>${escapeHtml(query)}</em>"
+        &nbsp;·&nbsp;
+        catalog ${escapeHtml(payload.dataset || selectedDataset)}
+        &nbsp;·&nbsp;
+        <span style="color:var(--brass)">⏱ ${time_s}s</span>
+    `);
+
+    results.forEach(book => {
+
+        const pct = Math.max(0, Math.min(100, book.similarity * 100));
+
+        const card = document.createElement("div");
+        card.className = "result-card d-flex align-items-center gap-3";
+
+        const titleHtml = escapeHtml(book.title || "Unknown title");
+        const titleBlock = book.link
+            ? `<a href="${escapeHtml(book.link)}" target="_blank" rel="noopener"
+                 style="color:inherit;">${titleHtml}</a>`
+            : titleHtml;
+
+        card.innerHTML = `
+            <div class="index-tag">${String(book.rank).padStart(2,"0")}</div>
+
+            <div class="flex-grow-1">
+                <div class="result-title">
+                    ${titleBlock}
+                </div>
+
+                <div class="result-author">
+                    ${escapeHtml(book.author || "Unknown author")}
+                </div>
+            </div>
+
+            <div class="text-end" style="min-width:120px;">
+                <div class="sim-value mb-1">
+                    ${pct.toFixed(1)}% match
+                </div>
+
+                <div class="sim-meter">
+                    <span style="width:${pct}%"></span>
+                </div>
+            </div>
+        `;
+
+        resultsBox.appendChild(card);
+    });
+}
+
+function escapeHtml(str){
+    const div = document.createElement("div");
+    div.textContent = str ?? "";
+    return div.innerHTML;
+}
+
+async function runSearch(query){
+
+    clearResults();
+    setState("Searching...");
+    btn.disabled = true;
+
+    try{
+
+        const url = `${SEARCH_ENDPOINT}?q=${encodeURIComponent(query)}&top=${TOP_N}&dataset=${selectedDataset}`;
+
+        const res = await fetch(url);
+
+        if(!res.ok){
+
+            const errBody = await res.json().catch(() => ({}));
+
+            throw new Error(errBody.error || `Error ${res.status}`);
+        }
+
+        const data = await res.json();
+
+        renderResults(data);
+
+    }catch(err){
+
+        setState(`
+            <span style="color:#e08585;">
+                Error: ${escapeHtml(err.message)}
+            </span>
+            — make sure the backend is running at
+            <code>${API_BASE_URL}</code>.
+        `);
+
+    }finally{
+        btn.disabled = false;
+    }
+}
+
+form.addEventListener("submit", e => {
+
+    e.preventDefault();
+
+    const q = input.value.trim();
+
+    if(q.length < 2) return;
+
+    runSearch(q);
+
+});
+
+document.querySelectorAll(".dataset-chip").forEach(chip => {
+
+    chip.addEventListener("click", () => {
+
+        selectedDataset = chip.dataset.size;
+
+        document.querySelectorAll(".dataset-chip")
+            .forEach(c => c.classList.toggle("active", c === chip));
+
+    });
+
+});
+
+document.querySelectorAll(".example-chip").forEach(chip => {
+
+    chip.addEventListener("click", () => {
+
+        input.value = chip.textContent.trim();
+
+        form.requestSubmit();
+
+    });
+
+});
+</script>
+
+</body>
+</html>

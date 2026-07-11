@@ -1,0 +1,47 @@
+services:
+
+  mongodb:
+    image: mongo:7
+    container_name: gutenberg-mongo
+    ports:
+      - "27017:27017"
+    volumes:
+      # I dati (collection books_tfidf_500/2000/5000) vivono qui e sopravvivono
+      # a 'docker compose down'. NON usare 'down -v' o si perde il seeding.
+      - mongo-data:/data/db
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build: ./backend
+    container_name: gutenberg-backend
+    depends_on:
+      mongodb:
+        condition: service_healthy
+    ports:
+      - "5000:5000"
+    environment:
+      - MONGO_URI=mongodb://mongodb:27017/
+      - MONGO_DB=gutenberg
+      - IDF_MODEL_PATH=/app/idf_model
+      - NUM_FEATURES=100000
+      - DEFAULT_DATASET=500
+      - PRELOAD_DATASETS=500
+    volumes:
+      # Modelli IDF calcolati in locale da seed_datasets.py (uno per size)
+      - ./idf_model:/app/idf_model:ro
+    restart: unless-stopped
+
+  frontend:
+    build: ./frontend
+    container_name: gutenberg-frontend
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+
+volumes:
+  mongo-data:
